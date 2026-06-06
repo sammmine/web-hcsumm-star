@@ -22,55 +22,50 @@ Fitur
 ● Web dapat mendukung pengunggahan dua versi kode program (t0 dan t1).
 ● Format file yang didukung hanya file python (.py).
 
-2. Konfigurasi Kluster dan Parameter
-●  Pengguna dapat mengatur semua parameter pipeline.
+2. Konfigurasi Parameter dan Kluster
+●  Berikut merupakan deskripsi dari masing-masing parameter.
 ○  Parameter Node2Vec:
-| Parameter    | Default  | Keterangan                    |
-| ------------ | -------- | ----------------------------- |
-| EMBED_DIM    | 4        | Dimensi embedding vektor      |
-| WALK_LENGTH  | 10       | Panjang random walk           |
-| NUM_WALKS    | 200      | Jumlah walk per node          |
-| P_RETURN     | 1.0      | Probabilitas kembali ke node  |
+| Parameter  | Default  | Keterangan  |
+| ---------- | -------- | ----------- |
+Value
+| EMBED_DIM    | 4    | Dimensi embedding vektor      |
+| ------------ | ---- | ----------------------------- |
+| WALK_LENGTH  | 10   | Panjang random walk           |
+| NUM_WALKS    | 200  | Jumlah walk per node          |
+| P_RETURN     | 1.0  | Probabilitas kembali ke node  |
 sebelumnya
 | Q_INOUT  | 1.0  | Kontrol eksplorasi lokal vs global  |
 | -------- | ---- | ----------------------------------- |
 | SEED     | 42   | Seed untuk reproduktifitas          |
 
 ○  Parameter Behaviour:
-| Pilihan Preset      |     | Fitur Aktif                 |
-| ------------------- | --- | --------------------------- |
-| baseline_current    |     | EPL, indeg, outdeg, depth   |
-| full_with_pagerank  |     | EPL, indeg, outdeg, depth,  |
-PageRank
-| without_EPL     |     | indeg, outdeg, depth, PageRank  |
-| --------------- | --- | ------------------------------- |
-| without_indeg   |     | EPL, outdeg, depth, PageRank    |
-| without_outdeg  |     | EPL, indeg, depth, PageRank     |
-| without_depth   |     | EPL, indeg, outdeg, PageRank    |
-| pagerank_only   |     | PageRank                        |
-| EPL_only        |     | EPL                             |
-
-Deskripsi masing-masing parameter behaviour:
-
-| Parameter  | Deskripsi                              |     |     |
-| ---------- | -------------------------------------- | --- | --- |
-| EPL        | Rata-rata panjang execution path yang  |     |     |
+| Parameter  | Keterangan                             |     |
+| ---------- | -------------------------------------- | --- |
+| EPL        | Rata-rata panjang execution path yang  |     |
 melewati node tersebut, diukur dari entry
 node sampai exit node.
 indeg (In-degree)  Jumlah fungsi lain yang memanggil node ini.
 outdeg (Out-degree)  Jumlah fungsi lain yang dipanggil oleh node
 ini.
-| Depth  | Jarak terpendek dari entry node ke node ini  |     |     |
-| ------ | -------------------------------------------- | --- | --- |
+| Depth  | Jarak terpendek dari entry node ke node ini  |     |
+| ------ | -------------------------------------------- | --- |
 di dalam call graph.
-| PageRank  | Skor "kepentingan" node berdasarkan  |     |     |
-| --------- | ------------------------------------ | --- | --- |
+| PageRank  | Skor "kepentingan" node berdasarkan  |     |
+| --------- | ------------------------------------ | --- |
 struktur graph secara global.
 
 ○  Parameter Clustering:
-| Parameter   |     | Keterangan             |     |
-| ----------- | --- | ---------------------- | --- |
+| Parameter  |     | Keterangan  |
+| ---------- | --- | ----------- |
+
 | K_CLUSTERS  |     | Jumlah cluster target  |     |
+| ----------- | --- | ---------------------- | --- |
+
+●  Pengguna  hanya  dapat  mengonfigurasi  parameter behavioural dan jumlah
+kluster target. Parameter behavioural secara default mengaktifkan empat fitur:
+EPL, in-degree, out-degree, dan depth. Pengguna dapat mengaktifkan atau
+menonaktifkan  masing-masing  fitur  secara  individual  sesuai  kebutuhan
+eksperimen.
 
 3. Mode Embedding
 ●  Pengguna dapat memilih satu dari tiga mode sebelum menjalankan pipeline.
@@ -79,13 +74,13 @@ struktur graph secara global.
 | Node2Vec Only  | 𝑥 = 𝑒'(𝑣)            |     | Embedding hanya dari  |
 node2vec, tanpa fitur
 behaviour
-*
-| Behaviour Only  | 𝑥 = 𝑓 (𝑣)  |     | Embedding hanya dari fitur  |
-| --------------- | ---------- | --- | --------------------------- |
+| Behaviour Only  | *   |     | Embedding hanya dari fitur  |
+| --------------- | --- | --- | --------------------------- |
+𝑥 = 𝑓 (𝑣)
 behaviour
-| Combined/Fused  |                  | *         | Fusion kedua fitur  |
+*
+| Combined/Fused  | 𝑥 = 𝑓𝑢𝑠𝑒(𝑒'(𝑣),𝑓 | (𝑣),α,β)  | Fusion kedua fitur  |
 | --------------- | ---------------- | --------- | ------------------- |
-|                 | 𝑥 = 𝑓𝑢𝑠𝑒(𝑒'(𝑣),𝑓 | (𝑣),α,β)  |                     |
 
 ●  Pilihan mode tersebut mempengaruhi parameter mana saja yang aktif di form
 konfigurasi (parameter yang tidak relevan akan di-disable otomatis).
@@ -93,16 +88,16 @@ konfigurasi (parameter yang tidak relevan akan di-disable otomatis).
 4. Mode Visualisasi Hasil
 ●
 Pengguna dapat memilih mode tampilan hasil.
-| Mode View    | Deskripsi                                  |     |
-| ------------ | ------------------------------------------ | --- |
-| Direct View  | Hanya menampilkan summary graph t0 dan t1  |     |
+| Mode View    | Deskripsi                                  |     |     |
+| ------------ | ------------------------------------------ | --- | --- |
+| Direct View  | Hanya menampilkan summary graph t0 dan t1  |     |     |
 langsung setelah pipeline selesai, disertai tabel
 keanggotaan cluster.
-| Step-by-Step  | Menampilkan hasil dari tiap tahap pipeline.  |     |
-| ------------- | -------------------------------------------- | --- |
+| Step-by-Step  | Menampilkan hasil dari tiap tahap pipeline.  |     |     |
+| ------------- | -------------------------------------------- | --- | --- |
 Cluster Iteration  Menampilkan visualisasi* proses Ward Clustering
-| Visualization  | pada tiap iterasi.  |     |
-| -------------- | ------------------- | --- |
+| Visualization  | pada tiap iterasi.  |     |     |
+| -------------- | ------------------- | --- | --- |
 
 *Perlu dilakukannya cluster indexing untuk mempermudah visualisasi kluster.
 
@@ -125,19 +120,21 @@ Dual-Length  Setelah clustering  Portrait gabungan 𝑃(𝑙𝑜, 𝑙𝑐, 𝑘
 | --------------- | --- | --------------------------- |
 cluster
 
-●
-Tabel ringkasan NPD ditampilkan setelah pipeline selesai.
+●  Tabel ringkasan NPD ditampilkan setelah pipeline selesai.
 
 6. Side-by-Side Comparison t0 vs t1
-● Menampilkan summary graph t0 dan t1 berdampingan. Perlu dilakukannya
+●  Menampilkan  summary  graph  t0  dan  t1 berdampingan. Perlu dilakukannya
 cluster indexing untuk mempermudah visualisasi kluster.
+
 Spesifikasi Lainnya
-1. Tech Stack (Rekomendasi Kakas)
-Layer Pilihan
-Frontend React + Vite atau Next.js
-Graph Visualization Cytoscape.js atau react-force-graph
-Backend FastAPI (Python) — pipeline notebook dapat langsung
+1.  Tech Stack (Rekomendasi Kakas)
+| Layer                | Pilihan                              |     |
+| -------------------- | ------------------------------------ | --- |
+| Frontend             | React + Vite atau Next.js            |     |
+| Graph Visualization  | Cytoscape.js atau react-force-graph  |     |
+Backend  FastAPI (Python) — pipeline notebook dapat langsung
 dipakai
+
 Deploy Ditentukan kemudian
 2. Github Repository
 hps://github.com/sammmine/web-hcsumm-star
