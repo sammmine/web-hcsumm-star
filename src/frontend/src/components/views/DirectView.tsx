@@ -1,3 +1,4 @@
+import { InlineNotification, Stack } from "@carbon/react";
 import { useRunStore } from "../../state/runStore";
 import { GraphView } from "../GraphView";
 import { NpdTable } from "../NpdTable";
@@ -8,26 +9,43 @@ export function DirectView() {
   const bundle = useRunStore((s) => s.bundle);
   if (!bundle) return null;
   return (
-    <div>
+    <Stack gap={6}>
       {bundle.warnings.length > 0 && (
-        <p style={{ color: "#b07000" }}>⚠ {bundle.warnings.join("; ")}</p>
+        <Stack gap={3}>
+          {bundle.warnings.map((w, i) => (
+            <InlineNotification
+              key={i}
+              kind="warning"
+              lowContrast
+              hideCloseButton
+              title="Pipeline warning"
+              subtitle={w}
+            />
+          ))}
+        </Stack>
       )}
-      <h3>Summary graph t0</h3>
-      <GraphView elements={bundle.t0.summary} />
-      <h3>Summary graph t1</h3>
-      <GraphView elements={bundle.t1.summary} />
-      <h3>NPD metrics</h3>
-      <NpdTable rows={bundle.npd} />
-      <div style={{ display: "flex", gap: 32 }}>
+      <div>
+        <h3 className="cds--type-heading-02">Summary graph t0</h3>
+        <GraphView elements={bundle.t0.summary} />
+      </div>
+      <div>
+        <h3 className="cds--type-heading-02">Summary graph t1</h3>
+        <GraphView elements={bundle.t1.summary} />
+      </div>
+      <div>
+        <h3 className="cds--type-heading-02">NPD metrics</h3>
+        <NpdTable rows={bundle.npd} />
+      </div>
+      <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
         <div>
-          <h4>Cluster membership t0</h4>
+          <h4 className="cds--type-heading-01">Cluster membership t0</h4>
           <ClusterMembershipTable membership={bundle.t0.membership} />
         </div>
         <div>
-          <h4>Cluster membership t1</h4>
+          <h4 className="cds--type-heading-01">Cluster membership t1</h4>
           <ClusterMembershipTable membership={bundle.t1.membership} />
         </div>
       </div>
-    </div>
+    </Stack>
   );
 }

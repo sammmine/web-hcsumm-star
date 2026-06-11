@@ -1,25 +1,89 @@
+import { useState } from "react";
+import {
+  Accordion,
+  AccordionItem,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+} from "@carbon/react";
 import { useRunStore } from "../../state/runStore";
+import type { SideBundle } from "../../types";
 import { GraphView } from "../GraphView";
+import { DistanceMatrixTable, VectorTable } from "../StageTables";
 
-/**
- * MVP: render each pipeline stage from bundle.t*.stages.
- * TODO: render features/embedding/fusion tables + distance matrix; this stub shows the
- * call graph and summary graph endpoints for each time point.
- */
+const FEATURE_HEADERS = ["Node", "EPL", "indeg", "outdeg", "depth", "pagerank"];
+
+function dimHeaders(data: Record<string, number[]>): string[] {
+  const first = Object.values(data)[0] ?? [];
+  return ["Node", ...first.map((_, i) => `dim${i}`)];
+}
+
+/** Cytoscape measures its container at mount; only mount the graph once the panel is open. */
+function GraphAccordionItem({
+  title,
+  elements,
+  defaultOpen = false,
+}: {
+  title: string;
+  elements: SideBundle["callgraph"];
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <AccordionItem title={title} open={open} onHeadingClick={({ isOpen }) => setOpen(isOpen)}>
+      {open && <GraphView elements={elements} height={360} />}
+    </AccordionItem>
+  );
+}
+
+function SideStages({ side }: { side: SideBundle }) {
+  const { stages } = side;
+  const hasEmbedding = Object.keys(stages.embedding).length > 0;
+  const fusionNodes = Object.keys(stages.fusion).sort();
+  return (
+    <Accordion>
+      <GraphAccordionItem title="1 — Call graph" elements={side.callgraph} defaultOpen />
+      <AccordionItem title="2 — Behaviour features f*(v)">
+        <VectorTable headers={FEATURE_HEADERS} data={stages.features} />
+      </AccordionItem>
+      <AccordionItem title="3 — Node2vec embedding e'(v)">
+        {hasEmbedding ? (
+          <VectorTable headers={dimHeaders(stages.embedding)} data={stages.embedding} />
+        ) : (
+          <p className="cds--type-body-01">Not computed for this embedding mode.</p>
+        )}
+      </AccordionItem>
+      <AccordionItem title="4 — Cluster vector x(v)">
+        <VectorTable headers={dimHeaders(stages.fusion)} data={stages.fusion} />
+      </AccordionItem>
+      <AccordionItem title="5 — Distance matrix">
+        <DistanceMatrixTable matrix={stages.distance_matrix} labels={fusionNodes} />
+      </AccordionItem>
+      <GraphAccordionItem title="6 — Summary graph" elements={side.summary} />
+    </Accordion>
+  );
+}
+
+/** Every pipeline stage per time point: graphs + the intermediate numeric artifacts. */
 export function StepByStepView() {
   const bundle = useRunStore((s) => s.bundle);
   if (!bundle) return null;
   return (
-    <div>
-      {(["t0", "t1"] as const).map((t) => (
-        <section key={t}>
-          <h3>{t} — call graph</h3>
-          <GraphView elements={bundle[t].callgraph} height={360} />
-          <h3>{t} — summary graph</h3>
-          <GraphView elements={bundle[t].summary} height={360} />
-          {/* TODO: behaviour features table, embedding, fusion, distance matrix */}
-        </section>
-      ))}
-    </div>
+    <Tabs>
+      <TabList aria-label="Time points" contained>
+        <Tab>t0 (before)</Tab>
+        <Tab>t1 (after)</Tab>
+      </TabList>
+      <TabPanels>
+        <TabPanel>
+          <SideStages side={bundle.t0} />
+        </TabPanel>
+        <TabPanel>
+          <SideStages side={bundle.t1} />
+        </TabPanel>
+      </TabPanels>
+    </Tabs>
   );
 }

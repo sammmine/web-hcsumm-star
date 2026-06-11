@@ -1,24 +1,32 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@carbon/react";
 import type { NpdRow } from "../types";
 
 export function NpdTable({ rows }: { rows: NpdRow[] }) {
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>Metric</th>
-          <th>When</th>
-          <th>Value</th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table size="sm" useZebraStyles>
+      <TableHead>
+        <TableRow>
+          <TableHeader>Metric</TableHeader>
+          <TableHeader>When</TableHeader>
+          <TableHeader>Value</TableHeader>
+        </TableRow>
+      </TableHead>
+      <TableBody>
         {rows.map((r, i) => (
-          <tr key={i}>
-            <td>{r.metric}</td>
-            <td>{r.when}</td>
-            <td>{r.value.toFixed(4)}</td>
-          </tr>
+          <TableRow key={i}>
+            <TableCell>{r.metric}</TableCell>
+            <TableCell>{r.when}</TableCell>
+            <TableCell>{r.value.toFixed(4)}</TableCell>
+          </TableRow>
         ))}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }

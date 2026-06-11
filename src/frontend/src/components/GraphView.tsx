@@ -1,17 +1,27 @@
 import { useEffect, useRef } from "react";
 import cytoscape from "cytoscape";
 import dagre from "cytoscape-dagre";
+import {
+  purple60,
+  cyan40,
+  teal60,
+  magenta40,
+  red50,
+  green30,
+  blue50,
+} from "@carbon/colors";
 import type { CyElements } from "../types";
 
 cytoscape.use(dagre);
 
-// Palette for cluster coloring; consistent across t0/t1 thanks to backend cluster indexing.
-const PALETTE = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1"];
+// Carbon data-viz categorical palette (dark theme order); consistent across t0/t1
+// thanks to backend cluster indexing.
+export const CLUSTER_PALETTE = [purple60, cyan40, teal60, magenta40, red50, green30, blue50];
 
 export function clusterColor(clusterId: string | undefined): string {
-  if (!clusterId) return "#999";
+  if (!clusterId) return "#a8a8a8"; // gray-40
   const n = parseInt(clusterId.replace(/\D/g, ""), 10) || 0;
-  return PALETTE[n % PALETTE.length];
+  return CLUSTER_PALETTE[n % CLUSTER_PALETTE.length];
 }
 
 interface Props {
@@ -19,7 +29,11 @@ interface Props {
   height?: number;
 }
 
-/** Cytoscape wrapper: dagre layout for directed graphs, cluster-colored nodes. */
+/** Cytoscape wrapper: dagre layout for directed graphs, cluster-colored nodes.
+ *
+ * Cytoscape cannot read CSS custom properties, so colors below are hex literals
+ * mirroring the g100 tokens (text-primary #f4f4f4, gray-50 #8d8d8d).
+ */
 export function GraphView({ elements, height = 480 }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -36,8 +50,10 @@ export function GraphView({ elements, height = 480 }: Props) {
             "background-color": (ele: cytoscape.NodeSingular) =>
               clusterColor(ele.data("cluster") as string | undefined),
             "font-size": 10,
-            "text-valign": "center",
-            color: "#fff",
+            // Label below the node: white-on-fill fails contrast for light palette colors.
+            "text-valign": "bottom",
+            "text-margin-y": 4,
+            color: "#f4f4f4",
           },
         },
         {
@@ -46,12 +62,13 @@ export function GraphView({ elements, height = 480 }: Props) {
             "curve-style": "bezier",
             "target-arrow-shape": "triangle",
             width: 1.5,
-            "line-color": "#aaa",
-            "target-arrow-color": "#aaa",
+            "line-color": "#8d8d8d",
+            "target-arrow-color": "#8d8d8d",
           },
         },
       ],
-      layout: { name: "dagre", rankDir: "TB" } as cytoscape.LayoutOptions,
+      // nodeSep keeps long function-name labels from overlapping horizontally.
+      layout: { name: "dagre", rankDir: "TB", nodeSep: 60, rankSep: 50 } as cytoscape.LayoutOptions,
     });
     return () => cy.destroy();
   }, [elements]);
