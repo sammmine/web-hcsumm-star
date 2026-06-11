@@ -14,7 +14,6 @@ import random
 
 import networkx as nx
 import numpy as np
-from gensim.models import Word2Vec
 
 
 def directed_node2vec_walk(
@@ -87,6 +86,8 @@ def compute_directed_node2vec_embedding(
     epochs: int = 100,
 ) -> dict[str, np.ndarray]:
     """Generate walks -> train Word2Vec skip-gram -> per-node embedding ``e[v]``."""
+    from gensim.models import Word2Vec  # lazy: heavy dep, only needed at run time
+
     walks = generate_directed_node2vec_walks(
         G, num_walks=num_walks, walk_length=walk_length, p=p, q=q, seed=seed
     )

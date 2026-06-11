@@ -31,7 +31,9 @@ cd src/frontend && npm install && npm run dev   # http://localhost:5173
 
 ## Status
 
-Boilerplate ter-scaffold. Lapisan API (FastAPI, job runner, schema) & frontend (store, views,
-Cytoscape) sudah jadi; fungsi pipeline di `src/backend/hcsumm/` masih stub (`NotImplementedError`)
-— diisi di **Fase 0** dengan mengangkat fungsi dari `research/notebooks/hcsumm_star_NPD_final.ipynb`.
-Lihat docstring tiap modul untuk referensi cell notebook.
+**Fase 0 selesai.** Pipeline `src/backend/hcsumm/` sudah terisi penuh (lift dari
+`research/notebooks/hcsumm_star_NPD_final.ipynb`): call graph → execution path (dengan guard) →
+fitur behaviour → node2vec → fusion → Ward clustering → summary graph → metrik NPD, plus
+`run_full_pipeline` yang merakit ArtifactBundle JSON. Lapisan API (FastAPI, job runner, schema)
+& frontend (store, views, Cytoscape) sudah scaffolded. Catatan: node2vec butuh `gensim`
+(pakai Python 3.11/3.12 — gensim 4.x belum punya wheel untuk 3.14).

@@ -32,5 +32,7 @@ pytest
 
 ## Status
 
-Boilerplate scaffold. Pipeline functions are stubs (`raise NotImplementedError`) — to be filled
-from the notebook in Phase 0. See module docstrings for the source cell references.
+Phase 0 done: the `hcsumm/` pipeline is fully lifted from the notebook (call graph → paths →
+behaviour features → node2vec → fusion → Ward → summary → NPD), plus `run_full_pipeline`
+assembling the JSON ArtifactBundle. Pure-Python tests pass; the full-pipeline tests need
+`gensim` (use Python 3.11/3.12 — gensim 4.x has no wheels for 3.14 yet) and auto-skip otherwise.
