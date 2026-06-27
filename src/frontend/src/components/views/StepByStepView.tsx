@@ -13,7 +13,7 @@ import type { SideBundle } from "../../types";
 import { GraphView } from "../GraphView";
 import { DistanceMatrixTable, VectorTable } from "../StageTables";
 
-const FEATURE_HEADERS = ["Node", "EPL", "indeg", "outdeg", "depth", "pagerank"];
+const ALL_FEATURES = ["EPL", "indeg", "outdeg", "depth", "pagerank"];
 
 function dimHeaders(data: Record<string, number[]>): string[] {
   const first = Object.values(data)[0] ?? [];
@@ -38,15 +38,27 @@ function GraphAccordionItem({
   );
 }
 
-function SideStages({ side }: { side: SideBundle }) {
+function SideStages({ side, selectedFeatures }: { side: SideBundle; selectedFeatures: string[] }) {
   const { stages } = side;
   const hasEmbedding = Object.keys(stages.embedding).length > 0;
   const fusionNodes = Object.keys(stages.fusion).sort();
+
+  const featureHeaders = ["Node", ...selectedFeatures];
+  const filteredFeaturesData = Object.fromEntries(
+    Object.entries(stages.features).map(([node, vals]) => {
+      const filteredVals = selectedFeatures.map((f) => {
+        const idx = ALL_FEATURES.indexOf(f);
+        return vals[idx];
+      });
+      return [node, filteredVals];
+    })
+  );
+
   return (
     <Accordion>
       <GraphAccordionItem title="1 — Call graph" elements={side.callgraph} defaultOpen />
       <AccordionItem title="2 — Behaviour features f*(v)">
-        <VectorTable headers={FEATURE_HEADERS} data={stages.features} />
+        <VectorTable headers={featureHeaders} data={filteredFeaturesData} />
       </AccordionItem>
       <AccordionItem title="3 — Node2vec embedding e'(v)">
         {hasEmbedding ? (
@@ -78,10 +90,10 @@ export function StepByStepView() {
       </TabList>
       <TabPanels>
         <TabPanel>
-          <SideStages side={bundle.t0} />
+          <SideStages side={bundle.t0} selectedFeatures={bundle.config.behaviour_features} />
         </TabPanel>
         <TabPanel>
-          <SideStages side={bundle.t1} />
+          <SideStages side={bundle.t1} selectedFeatures={bundle.config.behaviour_features} />
         </TabPanel>
       </TabPanels>
     </Tabs>
