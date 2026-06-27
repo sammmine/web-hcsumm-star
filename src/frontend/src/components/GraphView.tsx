@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useId } from "react";
 import cytoscape from "cytoscape";
 import dagre from "cytoscape-dagre";
+import { Slider } from "@carbon/react";
 import {
   purple60,
   cyan40,
@@ -36,11 +37,15 @@ interface Props {
  */
 export function GraphView({ elements, height = 480 }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const cyRef = useRef<cytoscape.Core | null>(null);
+  const [zoom, setZoom] = useState(100);
+  const sliderId = useId();
 
   useEffect(() => {
     if (!ref.current) return;
     const cy = cytoscape({
       container: ref.current,
+      userZoomingEnabled: false,
       elements: [...elements.nodes, ...elements.edges],
       style: [
         {
@@ -70,8 +75,53 @@ export function GraphView({ elements, height = 480 }: Props) {
       // nodeSep keeps long function-name labels from overlapping horizontally.
       layout: { name: "dagre", rankDir: "TB", nodeSep: 60, rankSep: 50 } as cytoscape.LayoutOptions,
     });
-    return () => cy.destroy();
+    
+    cyRef.current = cy;
+    cy.on("layoutstop", () => {
+      setZoom(Math.round(cy.zoom() * 100));
+    });
+
+    return () => {
+      cy.destroy();
+      cyRef.current = null;
+    };
   }, [elements]);
 
-  return <div className="graph-canvas" style={{ height }} ref={ref} />;
+  return (
+    <div style={{ position: "relative", border: "1px solid #393939", borderRadius: 4 }}>
+      <div className="graph-canvas" style={{ height }} ref={ref} />
+      <div
+        style={{
+          position: "absolute",
+          bottom: 16,
+          left: 16,
+          right: 16,
+          background: "rgba(38, 38, 38, 0.9)",
+          padding: "8px 16px",
+          borderRadius: 4,
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ flex: 1 }}>
+          <Slider
+            id={sliderId}
+            labelText="Zoom"
+            value={zoom}
+            min={10}
+            max={300}
+            step={10}
+            hideTextInput
+            onChange={(d: { value: number }) => {
+              setZoom(d.value);
+              if (cyRef.current) cyRef.current.zoom(d.value / 100);
+            }}
+          />
+        </div>
+        <div style={{ marginLeft: "1rem", color: "#f4f4f4", fontFamily: "sans-serif", fontSize: 12, minWidth: "40px", textAlign: "right" }}>
+          {zoom}%
+        </div>
+      </div>
+    </div>
+  );
 }
