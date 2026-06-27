@@ -15,19 +15,36 @@ import type { CyElements } from "../types";
 
 cytoscape.use(dagre);
 
-// Carbon data-viz categorical palette (dark theme order); consistent across t0/t1
-// thanks to backend cluster indexing.
+// Small fixed palette for the common case (k ≤ 7); keeps summary graphs looking polished.
 export const CLUSTER_PALETTE = [purple60, cyan40, teal60, magenta40, red50, green30, blue50];
 
-export function clusterColor(clusterId: string | undefined): string {
+/**
+ * Generate a distinct HSL color for any cluster index using the golden-ratio
+ * trick: successive hues are spaced ~137.5° apart, guaranteeing that even
+ * dozens of clusters never land on nearby hues.
+ */
+function generateDistinctColor(index: number): string {
+  const GOLDEN_ANGLE = 137.508; // degrees
+  const hue = (index * GOLDEN_ANGLE) % 360;
+  return `hsl(${hue.toFixed(1)}, 70%, 55%)`;
+}
+
+export function clusterColor(clusterId: string | undefined, totalClusters?: number): string {
   if (!clusterId) return "#a8a8a8"; // gray-40
   const n = parseInt(clusterId.replace(/\D/g, ""), 10) || 0;
-  return CLUSTER_PALETTE[n % CLUSTER_PALETTE.length];
+  // Use the curated Carbon palette when there are few clusters; fall back to
+  // the golden-ratio generator when there are more clusters than palette slots.
+  if ((totalClusters ?? 0) <= CLUSTER_PALETTE.length) {
+    return CLUSTER_PALETTE[n % CLUSTER_PALETTE.length];
+  }
+  return generateDistinctColor(n);
 }
 
 interface Props {
   elements: CyElements;
   height?: number;
+  /** Total number of distinct clusters — used to pick the coloring strategy. */
+  totalClusters?: number;
 }
 
 /** Cytoscape wrapper: dagre layout for directed graphs, cluster-colored nodes.
@@ -35,7 +52,7 @@ interface Props {
  * Cytoscape cannot read CSS custom properties, so colors below are hex literals
  * mirroring the g100 tokens (text-primary #f4f4f4, gray-50 #8d8d8d).
  */
-export function GraphView({ elements, height = 480 }: Props) {
+export function GraphView({ elements, height = 480, totalClusters }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
   const [zoom, setZoom] = useState(100);
@@ -52,8 +69,13 @@ export function GraphView({ elements, height = 480 }: Props) {
           selector: "node",
           style: {
             label: "data(label)",
-            "background-color": (ele: cytoscape.NodeSingular) =>
-              clusterColor(ele.data("cluster") as string | undefined),
+            "background-color": (ele: cytoscape.NodeSingular) => {
+              // Count distinct clusters from the elements if totalClusters not provided.
+              const tc = totalClusters ?? new Set(
+                elements.nodes.map((n) => n.data.cluster as string).filter(Boolean)
+              ).size;
+              return clusterColor(ele.data("cluster") as string | undefined, tc);
+            },
             "font-size": 10,
             // Label below the node: white-on-fill fails contrast for light palette colors.
             "text-valign": "bottom",

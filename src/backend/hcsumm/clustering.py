@@ -75,11 +75,14 @@ def ward_iteration_steps(Z: np.ndarray | None, nodes: list[str]) -> list[dict]:
     for s, row in enumerate(Z, start=1):
         a, b = int(row[0]), int(row[1])
         dist = float(row[2])
+        merged_a = list(members[a])
+        merged_b = list(members[b])
         members[next_id] = members.pop(a) + members.pop(b)
         steps.append(
             {
                 "step": s,
                 "merged": [a, b],
+                "merged_names": [merged_a, merged_b],
                 "distance": dist,
                 "clusters": {cid: list(m) for cid, m in members.items()},
             }

@@ -45,11 +45,21 @@ export interface CyElements {
   edges: { data: Record<string, unknown> }[];
 }
 
+export interface ClusterIterationStep {
+  step: number;
+  /** Two groups of node names that were merged in this step. */
+  merged: string[][];
+  distance: number;
+  numClusters: number;
+  graph: CyElements;
+}
+
 export interface SideBundle {
   callgraph: CyElements;
   summary: CyElements;
   membership: Record<string, string>;
   linkage: number[][];
+  iterations: ClusterIterationStep[];
   stages: {
     features: Record<string, number[]>;
     embedding: Record<string, number[]>;

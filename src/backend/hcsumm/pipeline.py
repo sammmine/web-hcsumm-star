@@ -25,7 +25,7 @@ import numpy as np
 
 from .callgraph import extract_call_graph_from_py
 from .cluster_indexing import align_cluster_indices
-from .clustering import ward_clustering
+from .clustering import ward_clustering, ward_iteration_steps
 from .config import EmbeddingMode, PipelineConfig
 from .embedding import compute_directed_node2vec_embedding, normalize_e_l2
 from .features import (
@@ -114,6 +114,7 @@ def _run_one_side(source: str, config: PipelineConfig) -> dict[str, Any]:
     dist_nodes, dist = compute_distance_matrix(x)
     clusters, Z = ward_clustering(x, k=config.k_clusters)
     summary, node_to_cluster = build_summary_graph(G, clusters)
+    iteration_steps = ward_iteration_steps(Z, sorted(x.keys()))
 
     return {
         "G": G,
@@ -128,6 +129,7 @@ def _run_one_side(source: str, config: PipelineConfig) -> dict[str, Any]:
         "Z": Z,
         "summary": summary,
         "node_to_cluster": node_to_cluster,
+        "iteration_steps": iteration_steps,
     }
 
 
@@ -157,11 +159,48 @@ def _serialize_side(side: dict[str, Any], node_to_cluster: dict[str, int]) -> di
         }
 
     Z = side["Z"]
+
+    # Serialize iteration steps with STABLE colors across merges.
+    # At step 0 each leaf node i gets color i.  When two clusters merge, the
+    # new cluster inherits the lower color index so the palette stays consistent.
+    nodes_sorted = sorted(side["x"].keys())
+    n_nodes = len(nodes_sorted)
+    color_map: dict[int, int] = {i: i for i in range(n_nodes)}  # scipy_id -> stable_color
+
+    iterations = []
+    for step_data in side["iteration_steps"]:
+        step_clusters = step_data["clusters"]  # {scipy_id: [node_names]}
+        step_n2c: dict[str, str] = {}
+        for cid, members in step_clusters.items():
+            stable_color = color_map.get(cid, cid)
+            for nd in members:
+                step_n2c[nd] = f"C{stable_color}"
+        step_graph = graph_to_cytoscape(G, membership=step_n2c)
+
+        # Update color_map for this merge (new_id inherits the lower color).
+        merged_ids = step_data["merged"]
+        if len(merged_ids) == 2:
+            a, b = merged_ids
+            new_id = n_nodes + step_data["step"] - 1
+            color_map[new_id] = min(color_map.get(a, a), color_map.get(b, b))
+
+        # Use actual node names instead of scipy indices.
+        merged_names: list[list[str]] = step_data.get("merged_names", [])
+
+        iterations.append({
+            "step": step_data["step"],
+            "merged": merged_names,
+            "distance": step_data["distance"],
+            "numClusters": len(step_clusters),
+            "graph": step_graph,
+        })
+
     return {
         "callgraph": graph_to_cytoscape(G, node_attrs=node_attrs, membership=membership),
         "summary": graph_to_cytoscape(side["summary"], node_attrs=summary_attrs),
         "membership": membership,
         "linkage": Z.tolist() if Z is not None else [],
+        "iterations": iterations,
         "stages": {
             "features": vectors_to_dict({n: f_star[n] for n in G.nodes()}),
             "embedding": vectors_to_dict(side["e_norm"]),

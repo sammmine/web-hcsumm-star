@@ -12,6 +12,7 @@ import { ParamForm } from "./components/ParamForm";
 import { DirectView } from "./components/views/DirectView";
 import { SideBySideView } from "./components/views/SideBySideView";
 import { StepByStepView } from "./components/views/StepByStepView";
+import { ClusterIterationsView } from "./components/views/ClusterIterationsView";
 import { createRun, pollRun } from "./api/client";
 import { useRunStore, type ViewMode } from "./state/runStore";
 
@@ -19,6 +20,7 @@ const VIEWS: { id: ViewMode; label: string }[] = [
   { id: "direct", label: "Direct" },
   { id: "side-by-side", label: "Side-by-side" },
   { id: "step-by-step", label: "Step-by-step" },
+  { id: "iterations", label: "Cluster Iterations" },
 ];
 
 function RunStatus({ status }: { status: ReturnType<typeof useRunStore.getState>["status"] }) {
@@ -100,6 +102,7 @@ export default function App() {
           {!isRunning && bundle && view === "direct" && <DirectView />}
           {!isRunning && bundle && view === "side-by-side" && <SideBySideView />}
           {!isRunning && bundle && view === "step-by-step" && <StepByStepView />}
+          {!isRunning && bundle && view === "iterations" && <ClusterIterationsView />}
         </Stack>
       </main>
     </div>

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { ArtifactBundle, JobStatus, PipelineConfig } from "../types";
 import { DEFAULT_CONFIG } from "../types";
 
-export type ViewMode = "direct" | "side-by-side" | "step-by-step";
+export type ViewMode = "direct" | "side-by-side" | "step-by-step" | "iterations";
 
 interface RunState {
   config: PipelineConfig;
