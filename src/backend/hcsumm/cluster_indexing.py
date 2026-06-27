@@ -52,13 +52,20 @@ def align_cluster_indices(
         remap[b] = a
         used_t0.add(a)
 
-    # Fresh ids for unmatched t1 clusters, avoiding any existing aligned id.
+    # Fresh ids for unmatched t1 clusters, first trying to reuse unused t0 ids.
+    used_t0_ids = set(remap.values())
+    unused_t0_ids = sorted(set(c0.keys()) - used_t0_ids)
+    
     existing = set(c0.keys()) | set(remap.values())
     next_free = (max(existing) + 1) if existing else 0
+    
     for b in c1:
         if b not in remap:
-            remap[b] = next_free
-            existing.add(next_free)
-            next_free += 1
+            if unused_t0_ids:
+                assigned = unused_t0_ids.pop(0)
+            else:
+                assigned = next_free
+                next_free += 1
+            remap[b] = assigned
 
     return remap
