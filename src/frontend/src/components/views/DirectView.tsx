@@ -26,11 +26,11 @@ export function DirectView() {
       )}
       <div>
         <h3 className="cds--type-heading-02">Summary graph t0</h3>
-        <GraphView elements={bundle.t0.summary} />
+        <GraphView elements={bundle.t0.summary} title="summary_t0_before" />
       </div>
       <div>
         <h3 className="cds--type-heading-02">Summary graph t1</h3>
-        <GraphView elements={bundle.t1.summary} />
+        <GraphView elements={bundle.t1.summary} title="summary_t1_after" />
       </div>
       <div>
         <h3 className="cds--type-heading-02">NPD metrics</h3>

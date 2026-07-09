@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, useId } from "react";
+import { useEffect, useRef, useState, useId, useCallback } from "react";
 import cytoscape from "cytoscape";
 import dagre from "cytoscape-dagre";
-import { Slider } from "@carbon/react";
+import { Slider, IconButton } from "@carbon/react";
+import { Download } from "@carbon/icons-react";
 import {
   purple60,
   cyan40,
@@ -29,13 +30,13 @@ function generateDistinctColor(index: number): string {
   return `hsl(${hue.toFixed(1)}, 70%, 55%)`;
 }
 
-export function clusterColor(clusterId: string | undefined, totalClusters?: number): string {
+export function clusterColor(clusterId: string | undefined): string {
   if (!clusterId) return "#a8a8a8"; // gray-40
   const n = parseInt(clusterId.replace(/\D/g, ""), 10) || 0;
-  // Use the curated Carbon palette when there are few clusters; fall back to
-  // the golden-ratio generator when there are more clusters than palette slots.
-  if ((totalClusters ?? 0) <= CLUSTER_PALETTE.length) {
-    return CLUSTER_PALETTE[n % CLUSTER_PALETTE.length];
+  // Use the curated Carbon palette for the first few clusters;
+  // fall back to the golden-ratio generator for larger IDs to avoid collisions.
+  if (n < CLUSTER_PALETTE.length) {
+    return CLUSTER_PALETTE[n];
   }
   return generateDistinctColor(n);
 }
@@ -45,6 +46,8 @@ interface Props {
   height?: number;
   /** Total number of distinct clusters — used to pick the coloring strategy. */
   totalClusters?: number;
+  /** Title used for the downloaded PNG filename. Defaults to "graph". */
+  title?: string;
 }
 
 /** Cytoscape wrapper: dagre layout for directed graphs, cluster-colored nodes.
@@ -52,11 +55,26 @@ interface Props {
  * Cytoscape cannot read CSS custom properties, so colors below are hex literals
  * mirroring the g100 tokens (text-primary #f4f4f4, gray-50 #8d8d8d).
  */
-export function GraphView({ elements, height = 480, totalClusters }: Props) {
+export function GraphView({ elements, height = 480, totalClusters, title = "graph" }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
   const [zoom, setZoom] = useState(100);
   const sliderId = useId();
+
+  /** Export the full graph as a high-resolution PNG (3× scale). */
+  const handleDownload = useCallback(() => {
+    const cy = cyRef.current;
+    if (!cy) return;
+    const dataUrl = cy.png({
+      full: true,
+      scale: 3,
+      bg: "#262626",
+    });
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = `${title.replace(/\s+/g, "_")}.png`;
+    link.click();
+  }, [title]);
 
   useEffect(() => {
     if (!ref.current) return;
@@ -70,11 +88,7 @@ export function GraphView({ elements, height = 480, totalClusters }: Props) {
           style: {
             label: "data(label)",
             "background-color": (ele: cytoscape.NodeSingular) => {
-              // Count distinct clusters from the elements if totalClusters not provided.
-              const tc = totalClusters ?? new Set(
-                elements.nodes.map((n) => n.data.cluster as string).filter(Boolean)
-              ).size;
-              return clusterColor(ele.data("cluster") as string | undefined, tc);
+              return clusterColor(ele.data("cluster") as string | undefined);
             },
             "font-size": 10,
             // Label below the node: white-on-fill fails contrast for light palette colors.
@@ -143,6 +157,15 @@ export function GraphView({ elements, height = 480, totalClusters }: Props) {
         <div style={{ marginLeft: "1rem", color: "#f4f4f4", fontFamily: "sans-serif", fontSize: 12, minWidth: "40px", textAlign: "right" }}>
           {zoom}%
         </div>
+        <IconButton
+          label="Download PNG"
+          kind="ghost"
+          size="sm"
+          onClick={handleDownload}
+          style={{ marginLeft: "0.5rem", color: "#f4f4f4" }}
+        >
+          <Download />
+        </IconButton>
       </div>
     </div>
   );

@@ -33,7 +33,7 @@ function GraphAccordionItem({
   const [open, setOpen] = useState(defaultOpen);
   return (
     <AccordionItem title={title} open={open} onHeadingClick={({ isOpen }) => setOpen(isOpen)}>
-      {open && <GraphView elements={elements} height={360} />}
+      {open && <GraphView elements={elements} height={360} title={title} />}
     </AccordionItem>
   );
 }

@@ -66,7 +66,7 @@ function IterationPlayer({ side, label }: { side: SideBundle; label: string }) {
         )}
       </div>
 
-      <GraphView elements={current.graph} height={480} totalClusters={current.numClusters} />
+      <GraphView elements={current.graph} height={480} totalClusters={current.numClusters} title={`cluster_iteration_${label}_step${current.step}`} />
     </Stack>
   );
 }
